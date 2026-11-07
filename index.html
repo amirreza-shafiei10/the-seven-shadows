@@ -710,12 +710,13 @@ const ORBIT_MS = 3200;
 let orbitT0 = -1, orbitDone = false;
 
 function tick(now) {
-  const dt = Math.min(64, now - last); last = now;
+  // the first rAF timestamp can predate `last`; a negative dt would blow the smoothing up to NaN
+  const dt = clamp(now - last, 0, 64); last = now;
   const r = story.getBoundingClientRect();
   p = clamp(-r.top / (story.offsetHeight - innerHeight));
   // a page tween is already eased, so follow it exactly; free scrolling gets smoothed
   sp += (p - sp) * (paging ? 1 : 1 - Math.pow(.82, dt / 16.7));
-  if (Math.abs(p - sp) < .0002) sp = p;
+  if (!(Math.abs(p - sp) >= .0002)) sp = p;               // also recovers if sp is ever NaN
   sx += (mx - sx) * .06; sy += (my - sy) * .06;
 
   // Video scrub + camera
